@@ -194,39 +194,6 @@ class PyiAwareFlakesChecker(FlakesChecker):
         """Does nothing, as we always want this property to be `True`."""
         pass
 
-    def deferHandleNode(self, node: ast.AST | None, parent) -> None:
-        self.deferFunction(lambda: self.handleNode(node, parent))
-
-    def ASSIGN(
-        self, tree: ast.Assign, omit: str | tuple[str, ...] | None = None
-    ) -> None:
-        """This is a custom implementation of ASSIGN derived from
-        handleChildren() in pyflakes 1.3.0.
-
-        The point here is that on module level, there's type aliases that we
-        want to bind eagerly, but defer computation of the values of the
-        assignments (the type aliases might have forward references).
-        """
-        if not isinstance(self.scope, ModuleScope):
-            super().ASSIGN(tree)
-            return
-
-        for target in tree.targets:
-            self.handleNode(target, tree)
-
-        self.deferHandleNode(tree.value, tree)
-
-    def LAMBDA(self, node: ast.Lambda) -> None:
-        """This is likely very brittle, currently works for pyflakes 1.3.0.
-
-        Deferring annotation handling depends on the fact that during calls
-        to LAMBDA visiting the function's body is already deferred and the
-        only eager calls to `handleNode` are for annotations.
-        """
-        self.handleNode, self.deferHandleNode = self.deferHandleNode, self.handleNode  # type: ignore[method-assign]
-        super().LAMBDA(node)
-        self.handleNode, self.deferHandleNode = self.deferHandleNode, self.handleNode  # type: ignore[method-assign]
-
     def handleNodeDelete(self, node: ast.AST) -> None:
         """Null implementation.
 

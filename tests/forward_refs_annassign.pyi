@@ -54,3 +54,16 @@ class MyClass:
 
 baz: MyClass
 eggs = baz
+
+# Not allowed, unless annotated with `TypeAlias`.
+# This is the default pyflakes behaviour - when annotated with `TypeAlias`,
+# pyflakes defers evaluating the value of the assignment.
+# https://github.com/PyCQA/pyflakes/issues/671
+X = Y  # F821 undefined name 'Y'
+Y = str
+Recursive = list[Recursive | str]  # Y026 Use typing_extensions.TypeAlias for type aliases, e.g. "Recursive: TypeAlias = list[Recursive | str]"  # F821 undefined name 'Recursive'
+
+# Same as above but this time with a `TypeAlias`
+U: TypeAlias = V
+V = str
+Recursive2: TypeAlias = list[Recursive2 | str]
